@@ -73,6 +73,10 @@ class VKToretFakturoidExtension {
 		register_setting( 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_due' );
 		register_setting( 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_note' );
 		register_setting( 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_note_checkout' );
+		register_setting( 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_note_checkout_fields', array(
+			$this,
+			'sanitizeCallback'
+		) );
 
 		// Add settings sections
 		add_settings_section( 'vk_toret_fakturoid_extension_section_general', 'General Settings', array(
@@ -92,6 +96,11 @@ class VKToretFakturoidExtension {
 		add_settings_field( 'vk_toret_fakturoid_extension_field_note_checkout', 'Enable custom note in checkout', array(
 			$this,
 			'fieldNoteCheckoutCallback'
+		), 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_section_general' );
+
+		add_settings_field( 'vk_toret_fakturoid_extension_field_note_checkout_user_roles', 'User roles for note in checkout field', array(
+			$this,
+			'fieldNoteCheckoutUserRoleCallback'
 		), 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_section_general' );
 	}
 
@@ -124,6 +133,23 @@ class VKToretFakturoidExtension {
 		echo '<input type="checkbox" id="enable_custom_note_in_checkout" name="vk_toret_fakturoid_extension_note_checkout" value="1" ' . checked( $enableCustomNoteInCheckout, true, false ) . '>';
 	}
 
+	// Add custom field for user roles in plugin settings page
+	function fieldNoteCheckoutUserRoleCallback() {
+		$user_roles           = get_editable_roles();
+		$note_checkout_fields = get_option( 'vk_toret_fakturoid_extension_note_checkout_fields', array() );
+		?>
+		<?php foreach ( $user_roles as $role => $details ) : ?>
+            <label for="vk_toret_fakturoid_extension_note_checkout_fields_<?php echo esc_attr( $role ); ?>">
+                <input type="checkbox" name="vk_toret_fakturoid_extension_note_checkout_fields[]"
+                       id="vk_toret_fakturoid_extension_note_checkout_fields_<?php echo esc_attr( $role ); ?>"
+                       value="<?php echo esc_attr( $role ); ?>" <?php checked( in_array( $role, $note_checkout_fields ), true ); ?> />
+				<?php echo esc_html( $details['name'] ); ?>
+            </label>
+            <br/>
+		<?php endforeach; ?>
+		<?php
+	}
+
 	// Add custom field for due date in user profile page
 	function addCustomFieldsToUserProfile( $user ) {
 		$user_id = $user->ID;
@@ -139,27 +165,27 @@ class VKToretFakturoidExtension {
 			return;
 		}
 		?>
-		<h2><?php echo esc_html__( 'Fakturoid extension', 'vk-toret-fakturoid-extension' ); ?></h2>
-		<table class="form-table">
+        <h2><?php echo esc_html__( 'Fakturoid extension', 'vk-toret-fakturoid-extension' ); ?></h2>
+        <table class="form-table">
 			<?php if ( $due_option ): ?>
-				<tr>
-					<th scope="row"><?php echo esc_html__( 'Due Days', 'vk-toret-fakturoid-extension' ); ?></th>
-					<td>
-						<input type="number" name="vk_toret_fakturoid_extension_due"
-						       value="<?php echo esc_attr( $due_days ); ?>"/>
-					</td>
-				</tr>
+                <tr>
+                    <th scope="row"><?php echo esc_html__( 'Due Days', 'vk-toret-fakturoid-extension' ); ?></th>
+                    <td>
+                        <input type="number" name="vk_toret_fakturoid_extension_due"
+                               value="<?php echo esc_attr( $due_days ); ?>"/>
+                    </td>
+                </tr>
 			<?php endif; ?>
 			<?php if ( $note_option ): ?>
-				<tr>
-					<th scope="row"><?php echo esc_html__( 'Custom Note', 'vk-toret-fakturoid-extension' ); ?></th>
-					<td>
+                <tr>
+                    <th scope="row"><?php echo esc_html__( 'Custom Note', 'vk-toret-fakturoid-extension' ); ?></th>
+                    <td>
                         <textarea name="vk_toret_fakturoid_extension_note" id="vk_toret_fakturoid_extension_note"
                                   cols="5" rows="3"><?php echo esc_attr( $custom_note ); ?></textarea>
-					</td>
-				</tr>
+                    </td>
+                </tr>
 			<?php endif; ?>
-		</table>
+        </table>
 		<?php
 	}
 
@@ -176,6 +202,14 @@ class VKToretFakturoidExtension {
 			}
 
 		}
+	}
+
+	public function sanitizeCallback( $input ) {
+		if ( is_array( $input ) ) {
+			return array_map( 'sanitize_text_field', $input );
+		}
+
+		return '';
 	}
 }
 
