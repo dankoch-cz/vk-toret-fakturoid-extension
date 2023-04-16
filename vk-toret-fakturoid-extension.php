@@ -54,6 +54,7 @@ class VKToretFakturoidExtension {
 		add_action( 'edit_user_profile_update', array( $this, 'saveCustomFieldInUserProfile' ) );
 		add_action( 'woocommerce_after_order_notes', array( $this, 'addWooCheckoutNote' ) );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'saveWooCheckoutNote' ) );
+		add_filter( 'fakturoid_custom_invoice_all_data', array( $this, 'updateFakturoidInvoiceBody' ), 10, 2 );
 
 	}
 
@@ -339,6 +340,43 @@ class VKToretFakturoidExtension {
 		$updater->set_username( 'dankoch-cz' );
 		$updater->set_repository( 'vk-toret-fakturoid-extension' );
 		$updater->initialize();
+	}
+
+	/**
+	 * Change Body of API call from Fakturoid plugin according to user centry
+	 *
+	 * @return void
+	 */
+	public function updateFakturoidInvoiceBody( $invoice_array, $order ) {
+
+		// Get user Data
+		if ( is_user_logged_in() ) {
+			$current_user     = wp_get_current_user();
+			$user_id          = $current_user->ID;
+			$user_due_days    = get_user_meta( $user_id, 'vktfe_due', true );
+			$user_custom_note = get_user_meta( $user_id, 'vktfe_note', true );
+		}
+
+		//Get order data
+		$order_due         = get_post_meta( $order->get_id(), 'vktfe_due', true );
+		$order_custom_note = get_post_meta( $order->get_id(), 'vktfe_note_checkout', true );
+
+
+		// Change invoice due
+		if ( ! empty( $order_due ) ) {
+			$invoice_array['due'] = $order_due;
+		} elseif ( ! empty( $user_due_days ) ) {
+			$invoice_array['due'] = $user_due_days;
+		}
+
+		//Add invoice note
+		if ( ! empty( $order_custom_note ) ) {
+			$invoice_array['note'] = $order_custom_note;
+		} elseif ( ! empty( $user_custom_note ) ) {
+			$invoice_array['note'] = $user_custom_note;
+		}
+
+		return $invoice_array;
 	}
 
 }
