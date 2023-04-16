@@ -38,6 +38,9 @@ class VKToretFakturoidExtension {
 		add_action( 'edit_user_profile', array( $this, 'addCustomFieldsToUserProfile' ) );
 		add_action( 'personal_options_update', array( $this, 'saveCustomFieldInUserProfile' ) );
 		add_action( 'edit_user_profile_update', array( $this, 'saveCustomFieldInUserProfile' ) );
+		add_action( 'woocommerce_after_order_notes', array( $this, 'addWooCheckoutNote' ) );
+		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'saveWooCheckoutNote' ) );
+
 	}
 
 	/**
@@ -59,8 +62,8 @@ class VKToretFakturoidExtension {
 		echo '<div class="wrap">';
 		echo '<h1>' . __( 'Fakturoid Extension Settings', 'vk' ) . '</h1>';
 		echo '<form method="post" action="options.php">';
-		settings_fields( 'vk_toret_fakturoid_extension' );
-		do_settings_sections( 'vk_toret_fakturoid_extension' );
+		settings_fields( 'vktfe' );
+		do_settings_sections( 'vktfe' );
 
 		// Submit button
 		echo '<input type="submit" class="button-primary" value="' . __( 'Save Settings', 'vk' ) . '">';
@@ -70,38 +73,38 @@ class VKToretFakturoidExtension {
 
 	public function settingsInit() {
 		// Register settings
-		register_setting( 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_due' );
-		register_setting( 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_note' );
-		register_setting( 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_note_checkout' );
-		register_setting( 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_note_checkout_fields', array(
+		register_setting( 'vktfe', 'vktfe_due' );
+		register_setting( 'vktfe', 'vktfe_note' );
+		register_setting( 'vktfe', 'vktfe_note_checkout' );
+		register_setting( 'vktfe', 'vktfe_note_checkout_fields', array(
 			$this,
 			'sanitizeCallback'
 		) );
 
 		// Add settings sections
-		add_settings_section( 'vk_toret_fakturoid_extension_section_general', 'General Settings', array(
+		add_settings_section( 'vktfe_section_general', 'General Settings', array(
 			$this,
 			'sectionGeneralCallback'
-		), 'vk_toret_fakturoid_extension' );
+		), 'vktfe' );
 
 		// Add settings fields
-		add_settings_field( 'vk_toret_fakturoid_extension_field_due', 'Enable custom due date', array(
+		add_settings_field( 'vktfe_field_due', 'Enable custom due date', array(
 			$this,
 			'fieldDueCallback'
-		), 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_section_general' );
-		add_settings_field( 'vk_toret_fakturoid_extension_field_note', 'Enable custom note', array(
+		), 'vktfe', 'vktfe_section_general' );
+		add_settings_field( 'vktfe_field_note', 'Enable custom note', array(
 			$this,
 			'fieldNoteCallback'
-		), 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_section_general' );
-		add_settings_field( 'vk_toret_fakturoid_extension_field_note_checkout', 'Enable custom note in checkout', array(
+		), 'vktfe', 'vktfe_section_general' );
+		add_settings_field( 'vktfe_field_note_checkout', 'Enable custom note in checkout', array(
 			$this,
 			'fieldNoteCheckoutCallback'
-		), 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_section_general' );
+		), 'vktfe', 'vktfe_section_general' );
 
-		add_settings_field( 'vk_toret_fakturoid_extension_field_note_checkout_user_roles', 'User roles for note in checkout field', array(
+		add_settings_field( 'vktfe_field_note_checkout_user_roles', 'User roles for note in checkout field', array(
 			$this,
 			'fieldNoteCheckoutUserRoleCallback'
-		), 'vk_toret_fakturoid_extension', 'vk_toret_fakturoid_extension_section_general' );
+		), 'vktfe', 'vktfe_section_general' );
 	}
 
 	public function sectionGeneralCallback() {
@@ -111,42 +114,48 @@ class VKToretFakturoidExtension {
 
 	public function fieldDueCallback() {
 		// Get the current value of the custom due date option
-		$enableCustomDueDate = get_option( 'vk_toret_fakturoid_extension_due', false );
+		$enableCustomDueDate = get_option( 'vktfe_due', false );
 
 		// Render the custom due date field
-		echo '<input type="checkbox" id="enable_custom_due_date" name="vk_toret_fakturoid_extension_due" value="1" ' . checked( $enableCustomDueDate, true, false ) . '>';
+		echo '<input type="checkbox" id="enable_custom_due_date" name="vktfe_due" value="1" ' . checked( $enableCustomDueDate, true, false ) . '>';
 	}
 
 	public function fieldNoteCallback() {
 		// Get the current value of the custom note option
-		$enableCustomNote = get_option( 'vk_toret_fakturoid_extension_note', false );
+		$enableCustomNote = get_option( 'vktfe_note', false );
 
 		// Render the custom note field
-		echo '<input type="checkbox" id="enable_custom_note" name="vk_toret_fakturoid_extension_note" value="1" ' . checked( $enableCustomNote, true, false ) . '>';
+		echo '<input type="checkbox" id="enable_custom_note" name="vktfe_note" value="1" ' . checked( $enableCustomNote, true, false ) . '>';
 	}
 
 	public function fieldNoteCheckoutCallback() {
 		// Get the current value of the custom note in checkout option
-		$enableCustomNoteInCheckout = get_option( 'vk_toret_fakturoid_extension_note_checkout', false );
+		$enableCustomNoteInCheckout = get_option( 'vktfe_note_checkout', false );
 
 		// Render the custom note in checkout field
-		echo '<input type="checkbox" id="enable_custom_note_in_checkout" name="vk_toret_fakturoid_extension_note_checkout" value="1" ' . checked( $enableCustomNoteInCheckout, true, false ) . '>';
+		echo '<input type="checkbox" id="enable_custom_note_in_checkout" name="vktfe_note_checkout" value="1" ' . checked( $enableCustomNoteInCheckout, true, false ) . '>';
 	}
 
 	// Add custom field for user roles in plugin settings page
 	function fieldNoteCheckoutUserRoleCallback() {
 		$user_roles           = get_editable_roles();
-		$note_checkout_fields = get_option( 'vk_toret_fakturoid_extension_note_checkout_fields', array() );
+		$note_checkout_fields = get_option( 'vktfe_note_checkout_fields', array() );
 		?>
 		<?php foreach ( $user_roles as $role => $details ) : ?>
-            <label for="vk_toret_fakturoid_extension_note_checkout_fields_<?php echo esc_attr( $role ); ?>">
-                <input type="checkbox" name="vk_toret_fakturoid_extension_note_checkout_fields[]"
-                       id="vk_toret_fakturoid_extension_note_checkout_fields_<?php echo esc_attr( $role ); ?>"
+            <label for="vktfe_note_checkout_fields_<?php echo esc_attr( $role ); ?>">
+                <input type="checkbox" name="vktfe_note_checkout_fields[]"
+                       id="vktfe_note_checkout_fields_<?php echo esc_attr( $role ); ?>"
                        value="<?php echo esc_attr( $role ); ?>" <?php checked( in_array( $role, $note_checkout_fields ), true ); ?> />
 				<?php echo esc_html( $details['name'] ); ?>
             </label>
             <br/>
 		<?php endforeach; ?>
+        <label for="vktfe_note_checkout_fields_guest">
+            <input type="checkbox" name="vktfe_note_checkout_fields[]"
+                   id="vktfe_note_checkout_fields_guest"
+                   value="<?php echo esc_attr( 'guest' ); ?>" <?php checked( in_array( 'guest', $note_checkout_fields ), true ); ?> />
+			<?php echo esc_html( 'Guest' ); ?>
+        </label>
 		<?php
 	}
 
@@ -154,11 +163,11 @@ class VKToretFakturoidExtension {
 	function addCustomFieldsToUserProfile( $user ) {
 		$user_id = $user->ID;
 
-		$due_option  = get_option( 'vk_toret_fakturoid_extension_due', false );
-		$note_option = get_option( 'vk_toret_fakturoid_extension_note', false );
+		$due_option  = get_option( 'vktfe_due', false );
+		$note_option = get_option( 'vktfe_note', false );
 
-		$due_days    = get_user_meta( $user_id, 'vk_toret_fakturoid_extension_due', true );
-		$custom_note = get_user_meta( $user_id, 'vk_toret_fakturoid_extension_note', true );
+		$due_days    = get_user_meta( $user_id, 'vktfe_due', true );
+		$custom_note = get_user_meta( $user_id, 'vktfe_note', true );
 
 		//Do not add fields if unchecked
 		if ( ! $due_option && ! $note_option ) {
@@ -171,7 +180,7 @@ class VKToretFakturoidExtension {
                 <tr>
                     <th scope="row"><?php echo esc_html__( 'Due Days', 'vk-toret-fakturoid-extension' ); ?></th>
                     <td>
-                        <input type="number" name="vk_toret_fakturoid_extension_due"
+                        <input type="number" min="0" name="vktfe_due"
                                value="<?php echo esc_attr( $due_days ); ?>"/>
                     </td>
                 </tr>
@@ -180,7 +189,7 @@ class VKToretFakturoidExtension {
                 <tr>
                     <th scope="row"><?php echo esc_html__( 'Custom Note', 'vk-toret-fakturoid-extension' ); ?></th>
                     <td>
-                        <textarea name="vk_toret_fakturoid_extension_note" id="vk_toret_fakturoid_extension_note"
+                        <textarea name="vktfe_note" id="vktfe_note"
                                   cols="5" rows="3"><?php echo esc_attr( $custom_note ); ?></textarea>
                     </td>
                 </tr>
@@ -192,8 +201,8 @@ class VKToretFakturoidExtension {
 	function saveCustomFieldInUserProfile( $user_id ) {
 		if ( current_user_can( 'edit_user', $user_id ) ) {
 			$fields = array(
-				'vk_toret_fakturoid_extension_due',
-				'vk_toret_fakturoid_extension_note'
+				'vktfe_due',
+				'vktfe_note'
 			);
 			foreach ( $fields as $field ) {
 				if ( isset( $_POST[ $field ] ) ) {
@@ -211,6 +220,54 @@ class VKToretFakturoidExtension {
 
 		return '';
 	}
+
+	// Add custom field to WooCommerce checkout
+	public function addWooCheckoutNote() {
+		$custom_checkout_note = get_option( 'vktfe_note_checkout', '' );
+
+		if ( empty( $custom_checkout_note ) ) {
+			return;
+		}
+
+		$custom_checkout_note_roles = get_option( 'vktfe_note_checkout_fields', array() );
+
+		$user       = wp_get_current_user();
+		$user_roles = $user->roles;
+
+		if ( ! is_user_logged_in() && ! in_array( 'guest', $custom_checkout_note_roles ) ) {
+			return; // Return if guest is not allowed to see the field
+		}
+
+		if ( in_array( 'guest', $custom_checkout_note_roles ) ) {
+			$user_roles[] = 'guest';
+		}
+
+		if ( ! empty( $custom_checkout_note_roles ) && ! array_intersect( $user_roles, $custom_checkout_note_roles ) ) {
+			return; // Return if user role is not allowed to see the field
+		}
+
+		$placeholder = apply_filters( 'vktfe_checkout_note_placeholder', esc_attr__( 'Note on the invoice, e.g. special order ID.', 'vk-toret-fakturoid-extension' ) );
+		$label       = apply_filters( 'vktfe_checkout_note_label', esc_attr__( 'Custom note on invoice', 'Custom note on invoice' ) );
+		?>
+        <div id="vk-toret-fakturoid-extension-custom-field" class="woocommerce-additional-fields">
+            <p class="form-row notes" id="order_comments_field">
+                <label for="vktfe_note_checkout"><?php echo $label; ?></label>
+                <textarea name="vktfe_note_checkout" class="input-text"
+                          id="vktfe_note_checkout" rows="5"
+                          placeholder="<?php echo $placeholder; ?>" cols="5"></textarea>
+            </p>
+        </div>
+
+		<?php
+	}
+
+	// Save custom field value to order meta
+	public function saveWooCheckoutNote( $order_id ) {
+		if ( isset( $_POST['vktfe_note_checkout'] ) ) {
+			update_post_meta( $order_id, 'vktfe_note_checkout', sanitize_textarea_field( $_POST['vktfe_note_checkout'] ) );
+		}
+	}
+
 }
 
 // Instantiate the plugin class

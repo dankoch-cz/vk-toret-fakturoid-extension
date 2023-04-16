@@ -5,6 +5,6 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 // Delete options from the database
-delete_option( 'vk_toret_fakturoid_extension_due' );
-delete_option( 'vk_toret_fakturoid_extension_note' );
-delete_option( 'vk_toret_fakturoid_extension_note_checkout' );
+delete_option( 'vktfe_due' );
+delete_option( 'vktfe_note' );
+delete_option( 'vktfe_note_checkout' );
