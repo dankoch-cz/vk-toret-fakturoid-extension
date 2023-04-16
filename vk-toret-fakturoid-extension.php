@@ -22,8 +22,16 @@ class VKToretFakturoidExtension {
 	 * Constructor
 	 */
 	public function __construct() {
+		//Include files
+		$this->loadFiles();
 		// Plugin initialization tasks, such as loading text domain, adding actions and filters, etc.
 		$this->actions();
+		$this->updater();
+
+	}
+
+	public function loadFiles() {
+		include_once plugin_dir_path( __FILE__ ) . '/updater.php';
 	}
 
 	/**
@@ -266,6 +274,13 @@ class VKToretFakturoidExtension {
 		if ( isset( $_POST['vktfe_note_checkout'] ) ) {
 			update_post_meta( $order_id, 'vktfe_note_checkout', sanitize_textarea_field( $_POST['vktfe_note_checkout'] ) );
 		}
+	}
+
+	public function updater() {
+		$updater = new VKUpdater( __FILE__ );
+		$updater->set_username( 'dankoch-cz' );
+		$updater->set_repository( 'vk-toret-fakturoid-extension' );
+		$updater->initialize();
 	}
 
 }
