@@ -1,6 +1,8 @@
 # Toret Fakturoid Extension
 
-Extension that adds custom note and due to the user.
+- Add custom fakturoid due and custom order note inside custom profile
+- Add custom fakturoid due and custom order note inside 'Add order'
+- Add custom fakturoid note to customer checkout
 
 ## How to install
 
