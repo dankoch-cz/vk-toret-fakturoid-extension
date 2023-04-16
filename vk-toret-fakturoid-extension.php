@@ -55,6 +55,8 @@ class VKToretFakturoidExtension {
 		add_action( 'woocommerce_after_order_notes', array( $this, 'addWooCheckoutNote' ) );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'saveWooCheckoutNote' ) );
 		add_filter( 'fakturoid_custom_invoice_all_data', array( $this, 'updateFakturoidInvoiceBody' ), 10, 2 );
+		add_action( 'add_meta_boxes_shop_order', array( $this, 'wooAddOrderMetaBox' ) );
+		add_action( 'save_post_shop_order', array( $this, 'wooSaveOrderMetaBox' ) );
 
 	}
 
@@ -379,7 +381,65 @@ class VKToretFakturoidExtension {
 		return $invoice_array;
 	}
 
+
+	/**
+	 * Add custom Fakturoid note and due fields in WooCommerce Add New Order page.
+	 */
+	public function wooAddOrderMetaBox() {
+		// Add custom meta box for Fakturoid fields in Add New Order page
+		add_meta_box(
+			'vk_toret_fakturoid_extension_order_meta',
+			__( 'Fakturoid Custom Fields', 'vk-toret-fakturoid-extension' ),
+			array( $this, 'wooAddOrderMetaBoxCB' ),
+			'shop_order',
+			'side',
+			'core'
+		);
+	}
+
+	/**
+	 * Callback function for custom Fakturoid fields in WooCommerce Add New Order page.
+	 */
+	public function wooAddOrderMetaBoxCB() {
+		global $post;
+
+		// Get saved values for Fakturoid fields
+		$custom_note = get_post_meta( $post->ID, 'vktfe_note_checkout', true );
+		$custom_due  = get_post_meta( $post->ID, 'vktfe_due', true );
+
+		// Output HTML for custom Fakturoid fields
+		?>
+        <p>
+            <label for="vktfe_note_checkout"><?php echo esc_html__( 'Custom Note:', 'vk-toret-fakturoid-extension' ); ?></label><br/>
+            <input type="text" id="vktfe_note_checkout" name="vktfe_note_checkout"
+                   value="<?php echo esc_attr( $custom_note ); ?>"/>
+        </p>
+        <p>
+            <label for="vktfe_due"><?php echo esc_html__( 'Custom Due:', 'vk-toret-fakturoid-extension' ); ?></label><br/>
+            <input type="text" id="vktfe_due" name="vktfe_due"
+                   value="<?php echo esc_attr( $custom_due ); ?>"/>
+        </p>
+		<?php
+	}
+
+	/**
+	 * Save custom Fakturoid fields in WooCommerce Add New Order page.
+	 *
+	 * @param int $post_id Order ID.
+	 */
+	public function wooSaveOrderMetaBox( $post_id ) {
+		// Check if Fakturoid fields are present in $_POST data
+		if ( isset( $_POST['vktfe_note_checkout'] ) ) {
+			update_post_meta( $post_id, 'vktfe_note_checkout', sanitize_text_field( $_POST['vktfe_note_checkout'] ) );
+		}
+		if ( isset( $_POST['vktfe_due'] ) ) {
+			update_post_meta( $post_id, 'vktfe_due', sanitize_text_field( $_POST['vktfe_due'] ) );
+		}
+	}
+
 }
 
 // Instantiate the plugin class
 new VKToretFakturoidExtension();
+
+
