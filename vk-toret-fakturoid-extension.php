@@ -17,6 +17,9 @@ if ( ! in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins',
 	return;
 }
 
+/**
+ *
+ */
 class VKToretFakturoidExtension {
 	/**
 	 * Constructor
@@ -30,6 +33,9 @@ class VKToretFakturoidExtension {
 
 	}
 
+	/**
+	 * @return void
+	 */
 	public function loadFiles() {
 		include_once plugin_dir_path( __FILE__ ) . '/updater.php';
 	}
@@ -65,6 +71,9 @@ class VKToretFakturoidExtension {
 		);
 	}
 
+	/**
+	 * @return void
+	 */
 	public function adminPageCallback() {
 		// Render the form
 		echo '<div class="wrap">';
@@ -79,6 +88,9 @@ class VKToretFakturoidExtension {
 		echo '</div>';
 	}
 
+	/**
+	 * @return void
+	 */
 	public function settingsInit() {
 		// Register settings
 		register_setting( 'vktfe', 'vktfe_due' );
@@ -115,11 +127,17 @@ class VKToretFakturoidExtension {
 		), 'vktfe', 'vktfe_section_general' );
 	}
 
+	/**
+	 * @return void
+	 */
 	public function sectionGeneralCallback() {
 		// Render the section description if needed
 		echo '<p>' . __( 'General settings for Fakturoid Extension', 'vk' ) . '</p>';
 	}
 
+	/**
+	 * @return void
+	 */
 	public function fieldDueCallback() {
 		// Get the current value of the custom due date option
 		$enableCustomDueDate = get_option( 'vktfe_due', false );
@@ -128,6 +146,9 @@ class VKToretFakturoidExtension {
 		echo '<input type="checkbox" id="enable_custom_due_date" name="vktfe_due" value="1" ' . checked( $enableCustomDueDate, true, false ) . '>';
 	}
 
+	/**
+	 * @return void
+	 */
 	public function fieldNoteCallback() {
 		// Get the current value of the custom note option
 		$enableCustomNote = get_option( 'vktfe_note', false );
@@ -136,6 +157,9 @@ class VKToretFakturoidExtension {
 		echo '<input type="checkbox" id="enable_custom_note" name="vktfe_note" value="1" ' . checked( $enableCustomNote, true, false ) . '>';
 	}
 
+	/**
+	 * @return void
+	 */
 	public function fieldNoteCheckoutCallback() {
 		// Get the current value of the custom note in checkout option
 		$enableCustomNoteInCheckout = get_option( 'vktfe_note_checkout', false );
@@ -144,7 +168,11 @@ class VKToretFakturoidExtension {
 		echo '<input type="checkbox" id="enable_custom_note_in_checkout" name="vktfe_note_checkout" value="1" ' . checked( $enableCustomNoteInCheckout, true, false ) . '>';
 	}
 
-	// Add custom field for user roles in plugin settings page
+	/**
+	 * Add custom field for user roles in plugin settings page
+	 *
+	 * @return void
+	 */
 	function fieldNoteCheckoutUserRoleCallback() {
 		$user_roles           = get_editable_roles();
 		$note_checkout_fields = get_option( 'vktfe_note_checkout_fields', array() );
@@ -168,6 +196,12 @@ class VKToretFakturoidExtension {
 	}
 
 	// Add custom field for due date in user profile page
+
+	/**
+	 * @param $user
+	 *
+	 * @return void
+	 */
 	function addCustomFieldsToUserProfile( $user ) {
 		$user_id = $user->ID;
 
@@ -206,6 +240,11 @@ class VKToretFakturoidExtension {
 		<?php
 	}
 
+	/**
+	 * @param $user_id
+	 *
+	 * @return void
+	 */
 	function saveCustomFieldInUserProfile( $user_id ) {
 		if ( current_user_can( 'edit_user', $user_id ) ) {
 			$fields = array(
@@ -221,6 +260,11 @@ class VKToretFakturoidExtension {
 		}
 	}
 
+	/**
+	 * @param $input
+	 *
+	 * @return array|string
+	 */
 	public function sanitizeCallback( $input ) {
 		if ( is_array( $input ) ) {
 			return array_map( 'sanitize_text_field', $input );
@@ -230,6 +274,10 @@ class VKToretFakturoidExtension {
 	}
 
 	// Add custom field to WooCommerce checkout
+
+	/**
+	 * @return void
+	 */
 	public function addWooCheckoutNote() {
 		$custom_checkout_note = get_option( 'vktfe_note_checkout', '' );
 
@@ -269,13 +317,23 @@ class VKToretFakturoidExtension {
 		<?php
 	}
 
-	// Save custom field value to order meta
+	/**
+	 *
+	 * Save custom field value to order meta
+	 *
+	 * @param $order_id
+	 *
+	 * @return void
+	 */
 	public function saveWooCheckoutNote( $order_id ) {
 		if ( isset( $_POST['vktfe_note_checkout'] ) ) {
 			update_post_meta( $order_id, 'vktfe_note_checkout', sanitize_textarea_field( $_POST['vktfe_note_checkout'] ) );
 		}
 	}
 
+	/**
+	 * @return void
+	 */
 	public function updater() {
 		$updater = new VKUpdater( __FILE__ );
 		$updater->set_username( 'dankoch-cz' );
